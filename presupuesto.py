@@ -34,6 +34,30 @@ def calcular_distribucion(n_asesores, cvs, nombre=None, rol=None):
         # 👩 Maria Fernanda
         elif "FERNANDA" in nombre or "MARIA FERNANDA" in nombre:
             return 487.5 / 2600
+        
+
+
+    # ==================================================
+    # 🔴 REGLA ESPECIAL COPACABANA
+    # ==================================================
+    if cvs == "COPACABANA":
+
+        # TOTAL META = 3000 aprox
+        # Vanessa = 1031
+        # Alexa = 1547
+        # Bibiana = 421.8
+
+        # 👩 Vanessa
+        if "VANESSA" in nombre:
+            return 1031 / 3000
+
+        # 👩 Alexa
+        elif "ALEXA" in nombre:
+            return 1547 / 3000
+
+        # 👩 Bibiana
+        elif "BIBIANA" in nombre:
+            return 421.8 / 3000
 
     # ==================================================
     # 🔴 REGLA ESPECIAL FRONTINO
