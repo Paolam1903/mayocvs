@@ -33,7 +33,7 @@ if not RUTA_LIQ.exists() or not RUTA_METAS.exists():
 # =============================
 st.markdown("""
 <div style="background-color:#E30613;padding:15px;border-radius:10px">
-<h1 style="color:white;text-align:center">📊 Dashboard Comercial de mayo actualizado al 19 – CVS PLUS al 16</h1>
+<h1 style="color:white;text-align:center">📊 Dashboard Comercial de mayo actualizado al 24 – CVS PLUS al 16</h1>
 </div>
 """, unsafe_allow_html=True)
 
@@ -460,7 +460,7 @@ with tab1:
 SUPERNUMERARIOS = [
     "Johan Daniel Herrera Mazo",
     "Kelly Yuliana Ospina Saldarriaga",
-    "Lider Zargoza Kelly Celsa",
+    "Evelis Mary Ojeda Baldovino",
     "Sara Julieth Acevedo Gutierrez"
 ]
 
@@ -468,27 +468,77 @@ SUPERNUMERARIOS = [
 # =====================
 # REGLA DE DISTRIBUCIÓN
 # =====================
-def calcular_distribucion(n_asesores, cvs):
-    if str(cvs).upper() == "FRONTINO":
-        return 0.50, 0.50
+def calcular_distribucion(n_asesores, cvs, nombre=None, rol=None):
 
+    cvs = str(cvs).upper()
+    nombre = str(nombre).upper() if nombre else ""
+
+    # ==================================================
+    # 🔴 REGLA ESPECIAL SABANETA
+    # ==================================================
+    # Metas puntos:
+    # Líder Sandra = 845
+    # Andrea Arenas = 1267.5
+    # Maria Fernanda = 487.5
+    #
+    # La suma total = 2600
+    #
+    # Se convierte a porcentaje para productos y puntos
+    # ==================================================
+
+    if cvs == "SABANETA":
+
+        # 👔 LÍDER
+        if rol == "LIDER":
+            return 851 / 2600
+
+        # 👩 Andrea
+        elif "ANDREA" in nombre:
+            return 1267.5 / 2600
+
+        # 👩 Maria Fernanda
+        elif "FERNANDA" in nombre or "MARIA FERNANDA" in nombre:
+            return 487.5 / 2600
+
+    # ==================================================
+    # 🔴 REGLA ESPECIAL FRONTINO
+    # ==================================================
+    if cvs == "FRONTINO":
+        return 0.50
+
+    # ==================================================
+    # 🔴 REGLAS NORMALES
+    # ==================================================
+
+    # Si no hay asesores
     if n_asesores == 0:
-        return 1.0, 1.0
+        return 1.0
 
-    if n_asesores == 1:
-        return 0.40, 0.60
-    elif n_asesores == 2:
-        return 0.25, 0.375
-    elif n_asesores >= 3:
-        return 0.20, 0.266
+    if rol == "LIDER":
+
+        if n_asesores == 1:
+            return 0.40
+        elif n_asesores == 2:
+            return 0.25
+        elif n_asesores >= 3:
+            return 0.20
+
     else:
-        return 1.0, 0.0
 
+        if n_asesores == 1:
+            return 0.60
+        elif n_asesores == 2:
+            return 0.375
+        elif n_asesores >= 3:
+            return 0.266
+
+    return 1.0
 
 # =====================
 # MAESTRO DE PRODUCTOS
 # =====================
 def maestro_productos_por_cvs(df, cvs_sel):
+
     df_cvs = df[df["Sucursal"] == cvs_sel]
 
     maestro = (
@@ -498,7 +548,14 @@ def maestro_productos_por_cvs(df, cvs_sel):
         .to_dict()
     )
 
-    productos_base = ["HOGAR", "POSTPAGO", "TERMINALES", "CVS PLUS", "OTROS"]
+    # Productos base obligatorios
+    productos_base = [
+        "HOGAR",
+        "POSTPAGO",
+        "TERMINALES",
+        "CVS PLUS",
+        "OTROS"
+    ]
 
     for p in productos_base:
         if p not in maestro:
@@ -507,26 +564,53 @@ def maestro_productos_por_cvs(df, cvs_sel):
     return maestro
 
 
+# =====================
+# TABLA PRODUCTOS
+# =====================
 def construir_tabla_productos(df_vendedor, maestro, df_cvs, rol):
 
-    # ❌ EXCLUIR SUPERNUMERARIOS SOLO PARA META
-    df_cvs_kpi = df_cvs[~df_cvs["Nombre_Vendedor"].isin(SUPERNUMERARIOS)]
+    # 🔴 EXCLUIR SUPERNUMERARIOS
+    df_cvs_kpi = df_cvs[
+        ~df_cvs["Nombre_Vendedor"].isin(SUPERNUMERARIOS)
+    ]
 
-    n_asesores = df_cvs_kpi[df_cvs_kpi["Rol"] == "ASESOR"]["Nombre_Vendedor"].nunique()
+    n_asesores = df_cvs_kpi[
+        df_cvs_kpi["Rol"] == "ASESOR"
+    ]["Nombre_Vendedor"].nunique()
 
-    porc_asesor, porc_lider = calcular_distribucion(n_asesores, df_cvs["Sucursal"].iloc[0])
+    cvs = df_cvs["Sucursal"].iloc[0]
 
-    porcentaje = porc_lider if rol == "ASESOR" else porc_asesor
+    nombre = df_vendedor["Nombre_Vendedor"].iloc[0]
 
-    ejec = df_vendedor.groupby("Producto")["Cantidad"].sum().to_dict()
+    # =========================
+    # PORCENTAJE PERSONALIZADO
+    # =========================
+    porcentaje = calcular_distribucion(
+        n_asesores,
+        cvs,
+        nombre,
+        rol
+    )
+
+    # =========================
+    # EJECUTADO PRODUCTOS
+    # =========================
+    ejec = (
+        df_vendedor.groupby("Producto")["Cantidad"]
+        .sum()
+        .to_dict()
+    )
 
     filas = []
 
     for producto, meta in maestro.items():
 
+        # 🔴 META AJUSTADA
         meta_ajustada = meta * porcentaje
+
         ejecutado = ejec.get(producto, 0)
 
+        # 🔴 % CUMPLIMIENTO
         if meta_ajustada > 0:
             pct = int(round((ejecutado / meta_ajustada) * 100))
         else:
@@ -541,9 +625,23 @@ def construir_tabla_productos(df_vendedor, maestro, df_cvs, rol):
 
     tabla = pd.DataFrame(filas)
 
-    orden_productos = ["POSTPAGO", "HOGAR", "TERMINALES", "OTROS", "CVS PLUS"]
+    # =========================
+    # ORDEN FIJO PRODUCTOS
+    # =========================
+    orden_productos = [
+        "POSTPAGO",
+        "HOGAR",
+        "TERMINALES",
+        "OTROS",
+        "CVS PLUS"
+    ]
 
-    tabla["Producto"] = pd.Categorical(tabla["Producto"], categories=orden_productos, ordered=True)
+    tabla["Producto"] = pd.Categorical(
+        tabla["Producto"],
+        categories=orden_productos,
+        ordered=True
+    )
+
     tabla = tabla.sort_values("Producto")
 
     return tabla
@@ -554,25 +652,42 @@ def construir_tabla_productos(df_vendedor, maestro, df_cvs, rol):
 # =====================
 def calcular_kpi_puntos(df_cvs, df_persona, rol):
 
-    # ❌ excluir supernumerarios del cálculo general
-    df_cvs_kpi = df_cvs[~df_cvs["Nombre_Vendedor"].isin(SUPERNUMERARIOS)]
+    # 🔴 EXCLUIR SUPERNUMERARIOS
+    df_cvs_kpi = df_cvs[
+        ~df_cvs["Nombre_Vendedor"].isin(SUPERNUMERARIOS)
+    ]
 
     meta_general = df_cvs_kpi["Meta_General"].iloc[0]
 
-    n_asesores = df_cvs_kpi[df_cvs_kpi["Rol"] == "ASESOR"]["Cedula_Vendedor"].nunique()
+    n_asesores = df_cvs_kpi[
+        df_cvs_kpi["Rol"] == "ASESOR"
+    ]["Cedula_Vendedor"].nunique()
 
     cvs = df_cvs_kpi["Sucursal"].iloc[0]
 
-    pct_lider, pct_asesor_individual = calcular_distribucion(n_asesores, cvs)
+    nombre = df_persona["Nombre_Vendedor"].iloc[0]
 
-    if rol == "LIDER":
-        meta = meta_general * pct_lider
-    else:
-        meta = meta_general * pct_asesor_individual
+    # =========================
+    # PORCENTAJE PERSONALIZADO
+    # =========================
+    porcentaje = calcular_distribucion(
+        n_asesores,
+        cvs,
+        nombre,
+        rol
+    )
 
+    # 🔴 META PERSONALIZADA
+    meta = meta_general * porcentaje
+
+    # 🔴 EJECUTADO
     ejecutado = df_persona["Puntos"].sum()
 
-    cumplimiento = round((ejecutado / meta) * 100, 1) if meta > 0 else 0
+    # 🔴 % CUMPLIMIENTO
+    cumplimiento = (
+        round((ejecutado / meta) * 100, 1)
+        if meta > 0 else 0
+    )
 
     return meta, ejecutado, cumplimiento
 

@@ -3,25 +3,71 @@ import pandas as pd
 # =====================
 # REGLA DE DISTRIBUCIÓN
 # =====================
-def calcular_distribucion(n_asesores, cvs):
-    # Regla especial para Frontino
-    if str(cvs).upper() == "FRONTINO":
-        return 0.50, 0.50
-    
-    # Si no hay asesores, el líder cumple al 100%
+def calcular_distribucion(n_asesores, cvs, nombre=None, rol=None):
+
+    cvs = str(cvs).upper()
+    nombre = str(nombre).upper() if nombre else ""
+
+    # ==================================================
+    # 🔴 REGLA ESPECIAL SABANETA
+    # ==================================================
+    # Metas puntos:
+    # Líder Sandra = 845
+    # Andrea Arenas = 1267.5
+    # Maria Fernanda = 487.5
+    #
+    # La suma total = 2600
+    #
+    # Se convierte a porcentaje para productos y puntos
+    # ==================================================
+
+    if cvs == "SABANETA":
+
+        # 👔 LÍDER
+        if rol == "LIDER":
+            return 845 / 2600
+
+        # 👩 Andrea
+        elif "ANDREA" in nombre:
+            return 1267.5 / 2600
+
+        # 👩 Maria Fernanda
+        elif "FERNANDA" in nombre or "MARIA FERNANDA" in nombre:
+            return 487.5 / 2600
+
+    # ==================================================
+    # 🔴 REGLA ESPECIAL FRONTINO
+    # ==================================================
+    if cvs == "FRONTINO":
+        return 0.50
+
+    # ==================================================
+    # 🔴 REGLAS NORMALES
+    # ==================================================
+
+    # Si no hay asesores
     if n_asesores == 0:
-        return 1.0, 1.0  # 100% meta productos, 100% meta general
+        return 1.0
 
-    # Reglas normales
-    if n_asesores == 1:
-        return 0.40, 0.60
-    elif n_asesores == 2:
-        return 0.25, 0.375
-    elif n_asesores >= 3:
-        return 0.20, 0.266
+    if rol == "LIDER":
+
+        if n_asesores == 1:
+            return 0.40
+        elif n_asesores == 2:
+            return 0.25
+        elif n_asesores >= 3:
+            return 0.20
+
     else:
-        return 1.0, 0.0
 
+        if n_asesores == 1:
+            return 0.60
+        elif n_asesores == 2:
+            return 0.375
+        elif n_asesores >= 3:
+            return 0.266
+
+    return 1.0
 
 
 # =================================================
