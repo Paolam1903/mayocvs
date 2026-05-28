@@ -391,66 +391,94 @@ with tab1:
     # =============================
     # META GENERAL
     # =============================
-    with col2:
+# =============================
+# META GENERAL VS EJECUTADO
+# =============================
 
-        st.subheader("🎯 Meta General")
+with col2:
 
-        meta_general = (
-            df_f[["Sucursal", "Meta_General"]]
-            .drop_duplicates()["Meta_General"]
-            .sum()
-        )
+    st.markdown("## 🎯 Meta General")
 
-        ejecutado_general = df_f["Puntos"].sum()
+    # Meta general sin duplicar CVS
+    meta_general = (
+        df_f[["Sucursal", "Meta_General"]]
+        .drop_duplicates()
+        ["Meta_General"]
+        .sum()
+    )
 
-        pct_general = (
-            (ejecutado_general / meta_general) * 100
-            if meta_general > 0 else 0
-        )
+    # Ejecutado general
+    ejecutado_general = df_f["Puntos"].sum()
 
-        df_general = pd.DataFrame({
-            "Concepto": ["Meta", "Ejecutado"],
-            "Valor": [meta_general, ejecutado_general]
-        })
+    # % cumplimiento general
+    pct_general = (
+        (ejecutado_general / meta_general) * 100
+        if meta_general > 0 else 0
+    )
 
-        fig2, ax2 = plt.subplots(figsize=(5, 5))
+    # =============================
+    # DATAFRAME
+    # =============================
+    df_general = pd.DataFrame({
+        "Concepto": ["Meta", "Ejecutado"],
+        "Valor": [meta_general, ejecutado_general]
+    })
 
-        bars = ax2.bar(
-            df_general["Concepto"],
-            df_general["Valor"],
-            color=[COLOR_META, COLOR_EJEC]
-        )
+    # =============================
+    # GRÁFICO ESTABLE
+    # =============================
+    fig2, ax2 = plt.subplots(figsize=(5, 5))
 
-        # Etiquetas
-        for bar in bars:
+    colores = ["#1E3A8A", "#0F766E"]
 
-            height = bar.get_height()
+    bars = ax2.bar(
+        df_general["Concepto"],
+        df_general["Valor"],
+        color=colores,
+        width=0.75
+    )
 
-            ax2.text(
-                bar.get_x() + bar.get_width()/2,
-                height,
-                f"{height:,.0f}".replace(",", "."),
-                ha="center",
-                va="bottom",
-                fontsize=9,
-                fontweight="bold"
-            )
+    # Etiquetas
+    for bar in bars:
 
-        ax2.set_title(
-            f"Cumplimiento: {pct_general:.1f}%",
-            fontsize=12,
+        height = bar.get_height()
+
+        ax2.text(
+            bar.get_x() + bar.get_width()/2,
+            height * 1.01,
+            f"{height:,.0f}".replace(",", "."),
+            ha="center",
+            va="bottom",
+            fontsize=11,
             fontweight="bold"
         )
 
-        ax2.yaxis.set_major_formatter(
-            plt.FuncFormatter(
-                lambda x, _: f"{int(x):,}".replace(",", ".")
-            )
+    # Título fijo
+    ax2.set_title(
+        f"Cumplimiento: {pct_general:.1f}%",
+        fontsize=18,
+        fontweight="bold",
+        pad=15
+    )
+
+    # Formato eje Y
+    ax2.yaxis.set_major_formatter(
+        plt.FuncFormatter(
+            lambda x, _: f"{int(x):,}".replace(",", ".")
         )
+    )
 
-        ax2.grid(axis="y", linestyle="--", alpha=0.3)
+    # Grid
+    ax2.grid(axis="y", linestyle="--", alpha=0.3)
 
-        st.pyplot(fig2)
+    # Eliminar bordes superiores
+    ax2.spines["top"].set_visible(False)
+    ax2.spines["right"].set_visible(False)
+
+    # 🔴 IMPORTANTE
+    fig2.tight_layout(pad=2)
+
+    st.pyplot(fig2, clear_figure=True)
 
 
 
