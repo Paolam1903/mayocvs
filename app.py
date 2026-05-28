@@ -266,6 +266,12 @@ tab1, tab2, tab3 = st.tabs(["📊 Dashboard", "💰 Presupuesto / Comisión", "�
 # TAB 1 – DASHBOARD
 # =============================
 with tab1:
+
+    # EVITA TICK / RERUN
+    if not cvs_sel or cvs_sel == "Todos":
+        st.info("Selecciona una sucursal para visualizar el dashboard")
+        st.stop()
+
     st.subheader("📦 Cumplimiento por Producto")
 
     # =============================
@@ -386,7 +392,8 @@ with tab1:
 
         ax.legend(frameon=False)
 
-        st.pyplot(fig)
+        st.pyplot(fig, clear_figure=True)
+        plt.close(fig)
 
     # =============================
     # META GENERAL
@@ -479,6 +486,7 @@ with col2:
     fig2.tight_layout(pad=2)
 
     st.pyplot(fig2, clear_figure=True)
+    plt.close(fig)
 
 
 
