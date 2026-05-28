@@ -66,21 +66,21 @@ def calcular_distribucion(n_asesores, cvs, nombre=None, rol=None):
     if cvs == "ITAGUI":
 
         # TOTAL META = 2500
-        # Marcela = 781
-        # Dailyn = 1172
-        # Jhon = 547
+        # Marcela = 797
+        # Dailyn = 1195
+        # Jhon = 508
 
         # 👩 Marcela
         if "MARCELA" in nombre:
-            return 781 / 2500
+            return 797 / 2500
 
         # 👩 Dailyn
         elif "DAILYN" in nombre:
-            return 1172 / 2500
+            return 1195 / 2500
 
         # 👨 Jhon
         elif "JHON" in nombre:
-            return 547 / 2500
+            return 508 / 2500
 
     # ==================================================
     # 🔴 REGLA ESPECIAL FRONTINO
