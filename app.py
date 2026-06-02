@@ -6,6 +6,7 @@ import sqlite3
 from PIL import Image
 import matplotlib.pyplot as plt
 import numpy as np
+import math
 
 # =============================
 # CONFIG
@@ -688,11 +689,13 @@ def construir_tabla_productos(df_vendedor, maestro, df_cvs, rol):
     for producto, meta in maestro.items():
 
         # 🔴 META AJUSTADA
-        meta_ajustada = meta * porcentaje
+        meta_ajustada = math.floor((meta * porcentaje) + 0.5)
+
+        # Redondeo comercial
+        meta_ajustada = int(meta_ajustada + 0.5)
 
         ejecutado = ejec.get(producto, 0)
 
-        # 🔴 % CUMPLIMIENTO
         if meta_ajustada > 0:
             pct = int(round((ejecutado / meta_ajustada) * 100))
         else:
@@ -700,7 +703,7 @@ def construir_tabla_productos(df_vendedor, maestro, df_cvs, rol):
 
         filas.append({
             "Producto": producto,
-            "Meta_Producto": int(round(meta_ajustada)),
+            "Meta_Producto": meta_ajustada,
             "Ejecutado": int(ejecutado),
             "% Cumplimiento": f"{pct}%"
         })
@@ -760,7 +763,7 @@ def calcular_kpi_puntos(df_cvs, df_persona, rol):
     )
 
     # 🔴 META PERSONALIZADA
-    meta = meta_general * porcentaje
+    meta = math.floor((meta_general * porcentaje) + 0.5)
 
     # 🔴 EJECUTADO
     ejecutado = df_persona["Puntos"].sum()
